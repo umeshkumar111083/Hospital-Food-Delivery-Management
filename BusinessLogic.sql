@@ -331,3 +331,87 @@ ALTER TABLE users
 DROP COLUMN IF EXISTS name,
 DROP COLUMN IF EXISTS phone,
 DROP COLUMN IF EXISTS location;
+
+
+INSERT INTO deliveries (meal_id, delivery_personnel_id, delivery_status, delivery_notes)
+VALUES (4, 7, 'Assigned', 'New delivery task for Umesh Kumar');
+
+
+
+-- 1. View entries in the Users table
+SELECT * FROM users;
+
+-- 2. View entries in the Patients table
+SELECT * FROM patients;
+
+-- 3. View entries in the Diet Charts table
+SELECT * FROM diet_charts;
+
+-- 4. View entries in the Pantry Staff table
+SELECT * FROM pantry_staff;
+
+-- 5. View entries in the Delivery Personnel table
+SELECT * FROM delivery_personnel;
+
+-- 6. View entries in the Meals table
+SELECT * FROM meals;
+
+-- 7. View entries in the Deliveries table
+SELECT * FROM deliveries;
+
+
+
+-- Assuming meal_id 1 and 2 are ready for delivery and should be assigned to delivery personnel_id 61
+INSERT INTO deliveries (meal_id, delivery_personnel_id, delivery_status, delivery_notes)
+VALUES
+(1, 61, 'Assigned', 'Delivery assigned to Umesh Kumar'),
+(2, 61, 'Assigned', 'Delivery assigned to Umesh Kumar');
+
+-- Optionally, update the meals table if needed to reflect these meals are now being prepared or ready for delivery
+UPDATE meals
+SET preparation_status = 'Ready for Delivery'
+WHERE id IN (1, 2);
+
+
+-- Adjust the sequence for the 'meals' table
+SELECT setval('meals_id_seq', (SELECT MAX(id) FROM meals));
+
+
+INSERT INTO meals (diet_chart_id, pantry_staff_id, preparation_status)
+VALUES
+(1, 1, 'Completed'),  -- Adjust these values if necessary
+(2, 1, 'Completed');
+
+-- Retrieve the IDs of the newly added meals
+SELECT id FROM meals ORDER BY id DESC LIMIT 2;
+
+
+
+-- Inserting delivery personnel linked to user_id 3 (kumarumesh111083@gmail.com)
+INSERT INTO delivery_personnel (name, phone, user_id) VALUES ('Umesh Kumar', '1234567890', 3);
+
+-- Inserting pantry staff linked to user_id 2 (umeshkumar111083@gmail.com)
+INSERT INTO pantry_staff (name, phone, location, user_id) VALUES ('Umesh Kumar', '0987654321', 'Main Kitchen', 2);
+
+-- Inserting patients
+INSERT INTO patients (name, age, gender, disease, allergies, room_number, bed_number, floor_number, contact_phone, emergency_contact_phone) VALUES
+('John Doe', 45, 'Male', 'Diabetes', 'Nuts', 101, 1, 1, '1231231234', '3213214321'),
+('Jane Doe', 38, 'Female', 'Hypertension', 'None', 102, 2, 1, '4564564567', '6546547654');
+
+-- Inserting diet charts linked to patients
+INSERT INTO diet_charts (patient_id, meal_time, ingredients, instructions) VALUES
+(1, 'Morning', 'Oats, Almonds, Skim Milk', 'Serve warm'),
+(1, 'Evening', 'Grilled Chicken, Steamed Vegetables', 'No salt added'),
+(2, 'Morning', 'Fruit Salad, Yogurt', 'Use low-fat yogurt');
+
+-- Inserting meals linked to diet charts and pantry staff
+INSERT INTO meals (diet_chart_id, pantry_staff_id, preparation_status) VALUES
+(1, 1, 'Completed'),
+(2, 1, 'Completed'),
+(3, 1, 'Completed');
+
+-- Inserting deliveries linked to meals and delivery personnel
+INSERT INTO deliveries (meal_id, delivery_personnel_id, delivery_status, delivery_notes) VALUES
+(1, 1, 'In Transit', 'Urgent delivery needed'),
+(2, 1, 'Pending', 'Scheduled for evening delivery'),
+(3, 1, 'Pending', 'Prepare for morning delivery');

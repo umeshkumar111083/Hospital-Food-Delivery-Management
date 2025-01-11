@@ -200,3 +200,40 @@ INSERT INTO deliveries (meal_id, delivery_personnel_id, delivery_status) VALUES
 (1, 1, 'Delivered'),
 (2, 1, 'In Transit'),
 (3, 2, 'Pending');
+
+
+-- Step 1: Create the trigger function
+CREATE OR REPLACE FUNCTION classify_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If the role is 'pantry_staff', insert into the pantry_staff table
+  IF NEW.role = 'pantry_staff' THEN
+    INSERT INTO pantry_staff (name, phone, user_id)
+    VALUES (NULL, NULL, NEW.id)
+    ON CONFLICT (user_id) DO NOTHING; -- Avoid duplicate entries
+  END IF;
+
+  -- If the role is 'delivery_personnel', insert into the delivery_personnel table
+  IF NEW.role = 'delivery_personnel' THEN
+    INSERT INTO delivery_personnel (name, phone, user_id)
+    VALUES (NULL, NULL, NEW.id)
+    ON CONFLICT (user_id) DO NOTHING; -- Avoid duplicate entries
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Step 2: Attach the trigger to the users table
+DROP TRIGGER IF EXISTS classify_user_trigger ON users;
+
+CREATE TRIGGER classify_user_trigger
+AFTER INSERT OR UPDATE OF role
+ON users
+FOR EACH ROW
+EXECUTE FUNCTION classify_user();
+
+
+
+DELETE FROM users
+WHERE id IN (4, 5, 6);

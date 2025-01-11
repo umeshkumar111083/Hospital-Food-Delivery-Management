@@ -1,11 +1,19 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import {jwtDecode} from "jwt-decode"; // Import jwtDecode to decode the token
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+
+  // Define the decoded JWT type
+  type DecodedToken = {
+    role: string; // User role, e.g., "hospital_manager", "pantry_staff", "delivery_personnel"
+    email: string;
+    exp: number; // Token expiration time
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,8 +29,19 @@ export default function Login() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
 
-      // Redirect to dashboard on successful login
-      router.push("/dashboard");
+      // Decode the token to get the user role
+      const decoded: DecodedToken = jwtDecode(data.token);
+
+      // Redirect based on the user's role
+      if (decoded.role === "hospital_manager") {
+        router.push("/dashboard");
+      } else if (decoded.role === "pantry_staff") {
+        router.push("/pantrystaffdashboard");
+      } else if (decoded.role === "delivery_personnel") {
+        router.push("/deliverydashboard");
+      } else {
+        router.push("/unauthorized");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

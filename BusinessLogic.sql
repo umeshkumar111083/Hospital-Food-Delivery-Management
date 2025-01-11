@@ -237,3 +237,91 @@ EXECUTE FUNCTION classify_user();
 
 DELETE FROM users
 WHERE id IN (4, 5, 6);
+
+
+DROP TRIGGER IF EXISTS classify_user_trigger ON users;
+
+
+DROP FUNCTION IF EXISTS classify_user();
+
+ALTER TABLE users
+ADD COLUMN name VARCHAR(255),
+ADD COLUMN phone VARCHAR(20),
+ADD COLUMN location VARCHAR(255);
+
+
+CREATE OR REPLACE FUNCTION insert_pantry_staff()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.role = 'pantry_staff' THEN
+    INSERT INTO pantry_staff (name, phone, location, user_id)
+    VALUES (NEW.name, NEW.phone, NEW.location, NEW.id);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_insert_pantry_staff
+AFTER INSERT ON users
+FOR EACH ROW
+EXECUTE FUNCTION insert_pantry_staff();
+
+
+CREATE OR REPLACE FUNCTION insert_delivery_personnel()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.role = 'delivery_personnel' THEN
+    INSERT INTO delivery_personnel (name, phone, user_id)
+    VALUES (NEW.name, NEW.phone, NEW.id);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_insert_delivery_personnel
+AFTER INSERT ON users
+FOR EACH ROW
+EXECUTE FUNCTION insert_delivery_personnel();
+
+
+DROP TRIGGER IF EXISTS trg_insert_pantry_staff ON users;
+DROP TRIGGER IF EXISTS trg_insert_delivery_personnel ON users;
+
+
+DROP FUNCTION IF EXISTS insert_pantry_staff();
+DROP FUNCTION IF EXISTS insert_delivery_personnel();
+
+
+
+-- Function to handle user insertions for delivery_personnel and pantry_staff
+CREATE OR REPLACE FUNCTION handle_user_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Insert into delivery_personnel if role is delivery_personnel
+  IF NEW.role = 'delivery_personnel' THEN
+    INSERT INTO delivery_personnel (name, phone, user_id)
+    VALUES (NEW.name, NEW.phone, NEW.id);
+  END IF;
+
+  -- Insert into pantry_staff if role is pantry_staff
+  IF NEW.role = 'pantry_staff' THEN
+    INSERT INTO pantry_staff (name, phone, location, user_id)
+    VALUES (NEW.name, NEW.phone, NEW.location, NEW.id);
+  END IF;
+
+  -- No action for other roles
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create the trigger on the users table
+CREATE TRIGGER trigger_user_insert
+AFTER INSERT ON users
+FOR EACH ROW
+EXECUTE FUNCTION handle_user_insert();
+
+
+DROP TRIGGER IF EXISTS trigger_user_insert ON users;
+DROP FUNCTION IF EXISTS handle_user_insert();
+
+

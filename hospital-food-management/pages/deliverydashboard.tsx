@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 import { parse } from "cookie";
 import axios from "axios";
 
-// Task Type
+// ✅ Task Type
 type Task = {
   id: number;
   status: string;
@@ -15,85 +15,7 @@ type Task = {
   dietChart: string;
 };
 
-// Delivery Personnel Form Props
-type DeliveryPersonnelFormProps = {
-  email: string;
-  deliveryPersonnelId: number;
-  onClose: () => void;
-  token: string;
-};
-
-// Delivery Personnel Form Component
-const DeliveryPersonnelForm = ({ email, deliveryPersonnelId, onClose, token }: DeliveryPersonnelFormProps) => {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      await axios.post(
-        `/api/delivery-personnel/save`,
-        { name, email, phone, userId: deliveryPersonnelId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      alert("Details saved successfully.");
-      onClose(); // Close the form after successful submission
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to save details. Please try again.");
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Complete Your Profile</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full p-2 border rounded-md"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              value={email}
-              readOnly
-              className="w-full p-2 border rounded-md bg-gray-200"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Phone</label>
-            <input
-              type="text"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              className="w-full p-2 border rounded-md"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
-          >
-            Submit
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-// Decoded JWT Type
+// ✅ Decoded JWT Type
 type DecodedToken = {
   role: string;
   email: string;
@@ -101,126 +23,151 @@ type DecodedToken = {
   exp: number;
 };
 
+// ✅ Fetch Token & User Data
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req } = context;
   const cookies = parse(req.headers.cookie || "");
   const token = cookies.id_token;
 
-  if (!token) {
-    return { redirect: { destination: "/login", permanent: false } };
-  }
+  if (!token) return { redirect: { destination: "/login", permanent: false } };
 
   try {
     const decoded: DecodedToken = jwtDecode(token);
-
     if (decoded.role !== "delivery_personnel") {
       return { redirect: { destination: "/unauthorized", permanent: false } };
     }
 
-    return { props: { token, deliveryPersonnelId: decoded.id, email: decoded.email } };
-  } catch {
+    // ✅ Fetch correct delivery_personnel_id from the database
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/delivery_personnel/${decoded.id}`
+    );
+
+    const { id: deliveryPersonnelId } = response.data;
+
+    return { props: { token, deliveryPersonnelId, email: decoded.email } };
+  } catch (error) {
+    console.error("Error fetching delivery personnel ID:", error);
     return { redirect: { destination: "/login", permanent: false } };
   }
 };
 
-const DeliveryDashboard = ({
-  token,
-  deliveryPersonnelId,
-  email,
-}: {
-  token: string;
-  deliveryPersonnelId: number;
-  email: string;
-}) => {
+// ✅ Delivery Dashboard Component
+const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deliveryPersonnelId: number }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [showPopup, setShowPopup] = useState(true); // Default to show form for new users
+  const [loading, setLoading] = useState(true);
+  const [deliveryNotes, setDeliveryNotes] = useState<{ [key: number]: string }>({});
 
   useEffect(() => {
     async function fetchTasks() {
       try {
-        const response = await axios.get(`/api/delivery-tasks?deliveryPersonnelId=${deliveryPersonnelId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setTasks(response.data);
+        const response = await axios.get(
+          `/api/delivery_personnel/tasks?delivery_personnel_id=${deliveryPersonnelId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const sortedTasks = response.data.sort((a: Task, b: Task) => (a.status === "Delivered" ? 1 : -1));
+        setTasks(sortedTasks);
       } catch (error) {
         console.error("Error fetching delivery tasks:", error);
-      }
-    }
-
-    async function checkProfileCompletion() {
-      try {
-        const response = await axios.get(
-          `/api/delivery-personnel/status?userId=${deliveryPersonnelId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setShowPopup(!response.data.detailsFilled);
-      } catch (error) {
-        console.error("Error checking profile completion:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchTasks();
-    checkProfileCompletion();
   }, [token, deliveryPersonnelId]);
 
-  const markDeliveryDone = async (taskId: number, notes: string) => {
+  const handleNoteChange = (taskId: number, note: string) => {
+    setDeliveryNotes((prevNotes) => ({
+      ...prevNotes,
+      [taskId]: note,
+    }));
+  };
+
+  const markDeliveryDone = async (taskId: number) => {
     try {
+      const notes = deliveryNotes[taskId] || "No additional notes provided";
+
       await axios.put(
-        `/api/delivery-tasks/${taskId}`,
-        { status: "Delivered", notes },
+        `/api/delivery_personnel/update`,
+        { id: taskId, status: "Delivered", notes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
+
+      setTasks((prev) =>
+        prev.map((task) =>
           task.id === taskId ? { ...task, status: "Delivered", notes } : task
         )
       );
+
+      alert("✅ Delivery marked as completed!");
     } catch (error) {
       console.error("Error marking delivery as done:", error);
     }
   };
 
-  const handleClosePopup = () => {
-    setShowPopup(false);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 to-green-500 p-6">
-      {showPopup && (
-        <DeliveryPersonnelForm
-          email={email}
-          deliveryPersonnelId={deliveryPersonnelId}
-          onClose={handleClosePopup}
-          token={token}
-        />
-      )}
+    <div className="p-6 min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 text-white">
+      <h1 className="text-4xl font-extrabold text-center mb-8">🚚 Delivery Dashboard</h1>
 
-      <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
-        <h1 className="text-4xl font-bold text-center mb-8">🚚 Delivery Dashboard</h1>
-
+      {loading ? (
+        <p className="text-center text-white text-lg animate-pulse">Loading tasks...</p>
+      ) : tasks.length === 0 ? (
+        <p className="text-center text-white text-lg">No delivery tasks assigned.</p>
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tasks.map((task) => (
             <div
               key={task.id}
-              className="bg-gray-100 p-6 rounded-lg shadow-md transition-transform hover:scale-105"
+              className={`p-6 rounded-lg shadow-xl border-l-4 transform transition-transform hover:scale-105 ${
+                task.status === "Delivered"
+                  ? "bg-gray-200 text-gray-900 border-green-500"
+                  : "bg-white text-gray-900 border-yellow-500"
+              }`}
             >
-              <p className="font-bold">Patient: {task.patientName}</p>
-              <p>
-                Room: {task.roomNumber}, Bed: {task.bedNumber}
+              <p className="font-bold text-xl">👨‍⚕️ Patient: {task.patientName}</p>
+              <p className="text-md">
+                🏠 Room: <span className="font-semibold">{task.roomNumber}</span>, Bed:{" "}
+                <span className="font-semibold">{task.bedNumber}</span>
               </p>
-              <p>Diet Chart: {task.dietChart}</p>
-              <p>Status: {task.status}</p>
-              <textarea
-                placeholder="Add delivery notes"
-                className="w-full p-2 border rounded-md mt-4"
-                onBlur={(e) => markDeliveryDone(task.id, e.target.value)}
-              />
+              <p className="text-md">🍽 Diet Chart: <span className="font-semibold">{task.dietChart}</span></p>
+
+              <p className="mt-2 text-sm font-semibold">
+                Status:{" "}
+                <span
+                  className={`px-3 py-1 rounded-full ${
+                    task.status === "Delivered" ? "bg-green-500 text-white" : "bg-yellow-500 text-white"
+                  }`}
+                >
+                  {task.status}
+                </span>
+              </p>
+
+              {task.notes && (
+                <p className="mt-2 text-sm text-gray-700 italic">📌 Notes: {task.notes}</p>
+              )}
+
+              {/* ✅ Input for additional delivery notes */}
+              {task.status !== "Delivered" && (
+                <div className="mt-4">
+                  <textarea
+                    placeholder="Add delivery notes (optional)"
+                    className="w-full p-3 border rounded-md text-black shadow-md"
+                    value={deliveryNotes[task.id] || ""}
+                    onChange={(e) => handleNoteChange(task.id, e.target.value)}
+                  />
+                  <button
+                    className="mt-2 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
+                    onClick={() => markDeliveryDone(task.id)}
+                  >
+                    ✅ Mark as Delivered
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };

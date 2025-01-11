@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model deliveries {
+  id                    Int                 @id @default(autoincrement())
+  meal_id               Int?
+  delivery_personnel_id Int?
+  delivery_status       String?             @default("Pending") @db.VarChar(20)
+  delivered_at          DateTime?           @db.Timestamp(6)
+  delivery_notes        String?             @default("")
+  delivery_personnel    delivery_personnel? @relation(fields: [delivery_personnel_id], references: [id], onUpdate: NoAction)
+  meals                 meals?              @relation(fields: [meal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model delivery_personnel {
+  id         Int          @id @default(autoincrement())
+  name       String       @db.VarChar(255)
+  phone      String       @unique @db.VarChar(15)
+  user_id    Int?         @unique
+  deliveries deliveries[]
+  users      users?       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model diet_charts {
+  id           Int       @id @default(autoincrement())
+  patient_id   Int?
+  meal_time    String    @db.VarChar(20)
+  ingredients  String
+  instructions String?   @default("")
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  patients     patients? @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  meals        meals[]
+
+  @@unique([patient_id, meal_time], map: "unique_meal_time")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model meals {
+  id                 Int           @id @default(autoincrement())
+  diet_chart_id      Int?
+  pantry_staff_id    Int?
+  preparation_status String?       @default("Pending") @db.VarChar(20)
+  prepared_at        DateTime?     @db.Timestamp(6)
+  deliveries         deliveries[]
+  diet_charts        diet_charts?  @relation(fields: [diet_chart_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pantry_staff       pantry_staff? @relation(fields: [pantry_staff_id], references: [id], onUpdate: NoAction)
+}
+
+model pantry_staff {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(255)
+  phone    String  @unique @db.VarChar(15)
+  location String  @db.VarChar(255)
+  user_id  Int?    @unique
+  meals    meals[]
+  users    users?  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model patients {
+  id                      Int           @id @default(autoincrement())
+  name                    String        @db.VarChar(255)
+  age                     Int
+  gender                  String        @db.VarChar(10)
+  disease                 String?
+  allergies               String?
+  room_number             Int
+  bed_number              Int
+  floor_number            Int
+  contact_phone           String        @unique @db.VarChar(15)
+  emergency_contact_phone String        @db.VarChar(15)
+  created_at              DateTime?     @default(now()) @db.Timestamp(6)
+  diet_charts             diet_charts[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique @db.VarChar(255)
+  password_hash      String
+  role               String              @db.VarChar(50)
+  created_at         DateTime?           @default(now()) @db.Timestamp(6)
+  delivery_personnel delivery_personnel?
+  pantry_staff       pantry_staff?
+}

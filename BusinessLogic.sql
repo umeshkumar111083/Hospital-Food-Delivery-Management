@@ -325,3 +325,9 @@ DROP TRIGGER IF EXISTS trigger_user_insert ON users;
 DROP FUNCTION IF EXISTS handle_user_insert();
 
 
+ALTER TABLE users ADD COLUMN detailsFilled BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE users
+DROP COLUMN IF EXISTS name,
+DROP COLUMN IF EXISTS phone,
+DROP COLUMN IF EXISTS location;

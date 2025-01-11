@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { parse } from "cookie";
 import axios from "axios";
+import ProfileCompletionForm from "../components/ProfileCompletionForm";
 
 // ✅ Define Task and Delivery Personnel Types
 type Task = {
@@ -28,6 +29,7 @@ type DeliveryPersonnel = {
 type DecodedToken = {
   role: string;
   email: string;
+  id: number;
   exp: number;
 };
 
@@ -87,6 +89,7 @@ const PantryStaffDashboard = ({
 }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [deliveryPersonnel, setDeliveryPersonnel] = useState<DeliveryPersonnel[]>([]);
+  const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -102,13 +105,20 @@ const PantryStaffDashboard = ({
           headers: { Authorization: `Bearer ${token}` },
         });
         setDeliveryPersonnel(personnelResponse.data);
+
+        // Check if profile completion is required
+        const profileStatusResponse = await axios.get(
+          `/api/pantry-staff/status?userId=${decoded.id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setShowPopup(!profileStatusResponse.data.detailsFilled);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching data or checking profile status:", error);
       }
     }
 
     fetchData();
-  }, [token]);
+  }, [token, decoded.id]);
 
   const updatePreparationStatus = async (taskId: number, status: string) => {
     try {
@@ -142,6 +152,14 @@ const PantryStaffDashboard = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 to-indigo-600 p-6">
+      {showPopup && (
+        <ProfileCompletionForm
+          userId={decoded.id}
+          email={decoded.email} // Pre-fill email
+          role={decoded.role}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
       <div className="max-w-7xl mx-auto bg-white p-8 rounded-xl shadow-lg">
         <h1 className="text-4xl font-bold text-center mb-8">👨‍🍳 Inner Pantry Dashboard</h1>
 
@@ -171,7 +189,9 @@ const PantryStaffDashboard = ({
                 </div>
                 <div className="mt-4">
                   <select
-                    onChange={(e) => assignDeliveryPersonnel(task.id, parseInt(e.target.value))}
+                    onChange={(e) =>
+                      assignDeliveryPersonnel(task.id, parseInt(e.target.value))
+                    }
                     className="w-full px-4 py-2 border rounded-md"
                   >
                     <option value="">Assign Delivery Personnel</option>
@@ -182,22 +202,6 @@ const PantryStaffDashboard = ({
                     ))}
                   </select>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-2xl font-bold mb-4">🚚 Delivery Personnel</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {deliveryPersonnel.map((person) => (
-              <div
-                key={person.id}
-                className="bg-gray-100 p-6 rounded-lg shadow-md transition-transform hover:scale-105"
-              >
-                <p className="font-bold">Name: {person.name}</p>
-                <p>Contact: {person.contactInfo}</p>
-                <p>Details: {person.otherDetails || "N/A"}</p>
               </div>
             ))}
           </div>

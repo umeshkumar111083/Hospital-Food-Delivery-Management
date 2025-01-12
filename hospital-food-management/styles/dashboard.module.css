@@ -1,0 +1,97 @@
+.dashboardContainer {
+    min-height: 100vh;
+    background: linear-gradient(to bottom right, #4c51bf, #6b46c1, #d53f8c);
+    padding: 24px;
+  }
+  
+  .dashboardContent {
+    max-width: 1200px;
+    margin: auto;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .logoutBtn {
+    background: #e53e3e;
+    color: white;
+    padding: 10px 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: transform 0.2s;
+  }
+  
+  .logoutBtn:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Buttons */
+  .buttonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .dashboardBtn {
+    padding: 12px;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, background 0.2s;
+  }
+  
+  .dashboardBtn:hover {
+    transform: scale(1.05);
+  }
+  
+  .blue { background: #3182ce; }
+  .green { background: #38a169; }
+  .purple { background: #805ad5; }
+  .orange { background: #dd6b20; }
+  .pink { background: #d53f8c; }
+  
+  /* Sections */
+  .sectionTitle {
+    font-size: 1.75rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+  
+  .gridContainer {
+    display: grid;
+    gap: 16px;
+  }
+  
+  .dashboardCard {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .cardTitle {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+  
+  .emptyText {
+    text-align: center;
+    color: gray;
+  }

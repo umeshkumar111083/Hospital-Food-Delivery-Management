@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
+import styles from "../styles/dashboard.module.css"; // ✅ Import CSS Module
 
+// ✅ Define types for Patients, Diet Charts, and Pantry Staff
 type Patient = {
   id: number;
   name: string;
@@ -44,9 +46,9 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       const [patientsRes, dietChartsRes, pantryRes] = await Promise.all([
-        axios.get("/api/patients"),
-        axios.get("/api/diet-charts"),
-        axios.get("/api/pantry-staff"),
+        axios.get("/api/dashboard/patients"),
+        axios.get("/api/dashboard/diet-charts"),
+        axios.get("/api/dashboard/pantry-staff"),
       ]);
       setPatients(patientsRes.data);
       setDietCharts(dietChartsRes.data);
@@ -68,120 +70,85 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-400 to-purple-600 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto bg-white bg-opacity-90 backdrop-blur-lg p-6 sm:p-8 rounded-xl shadow-lg">
+    <div className={styles.dashboardContainer}>
+      <div className={styles.dashboardContent}>
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 text-center mb-4 sm:mb-0">
-            🏥 Hospital Food Manager Dashboard
-          </h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-red-600"
-          >
-            🚪 Logout
-          </button>
-
-          
-          
+        <div className={styles.header}>
+          <h1 className={styles.title}>🏥 Hospital Food Manager Dashboard</h1>
+          <button onClick={handleLogout} className={styles.logoutBtn}>🚪 Logout</button>
         </div>
-        {/* Buttons Section */}
-        <div className="flex flex-wrap gap-4 justify-center mb-8">
-          <button
-            onClick={() => router.push("/add-patient")}
-            className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-blue-600"
-          >
+
+        {/* Navigation Buttons */}
+        <div className={styles.buttonGrid}>
+          <button onClick={() => router.push("/add-patient")} className={`${styles.dashboardBtn} ${styles.blue}`}>
             ➕ Add New Patient
           </button>
-          <button
-            onClick={() => router.push("/add-diet-chart")}
-            className="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-green-600"
-          >
+          <button onClick={() => router.push("/add-diet-chart")} className={`${styles.dashboardBtn} ${styles.green}`}>
             🍽️ Add Diet Chart
           </button>
-          <button
-            onClick={() => router.push("/add-pantry-staff")}
-            className="px-6 py-3 bg-purple-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-purple-600"
-          >
+          <button onClick={() => router.push("/add-pantry-staff")} className={`${styles.dashboardBtn} ${styles.purple}`}>
             👨‍🍳 Add Pantry Staff
           </button>
-
-          <button
-            onClick={() => router.push("/delivery-status")}
-            className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-orange-600"
-          >
+          <button onClick={() => router.push("/delivery-status")} className={`${styles.dashboardBtn} ${styles.orange}`}>
             📦 Delivery Details
           </button>
-          <button
-            onClick={() => router.push("/pantry-staff-dashboard")}
-            className="px-6 py-3 bg-purple-500 text-white font-semibold rounded-lg shadow-md transition-transform hover:scale-105 hover:bg-purple-600"
-          >
+          <button onClick={() => router.push("/pantry-staff-dashboard")} className={`${styles.dashboardBtn} ${styles.pink}`}>
             👨‍🍳 Pantry Staff Dashboard
           </button>
-          
         </div>
 
         {/* Loading State */}
         {loading ? (
-          <p className="text-center text-gray-700 text-lg font-semibold">Loading dashboard data...</p>
+          <p className={styles.loadingText}>Loading dashboard data...</p>
         ) : (
           <>
             {/* Patients Section */}
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">🧑‍⚕️ Patients</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <h2 className={styles.sectionTitle}>🧑‍⚕️ Patients</h2>
+            <div className={styles.gridContainer}>
               {patients.length > 0 ? (
                 patients.map((patient) => (
-                  <div
-                    key={patient.id}
-                    className="bg-white p-4 sm:p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
-                  >
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{patient.name}</h3>
-                    <p className="text-gray-700">🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
-                    <p className="text-gray-700">🔹 Age: {patient.age} | Gender: {patient.gender}</p>
-                    <p className="text-gray-700">💊 Disease: {patient.disease || "N/A"}</p>
-                    <p className="text-gray-700">📞 Contact: {patient.contactPhone}</p>
+                  <div key={patient.id} className={styles.dashboardCard}>
+                    <h3 className={styles.cardTitle}>{patient.name}</h3>
+                    <p>🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
+                    <p>🔹 Age: {patient.age} | Gender: {patient.gender}</p>
+                    <p>💊 Disease: {patient.disease || "N/A"}</p>
+                    <p>📞 Contact: {patient.contactPhone}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-600">No patients available.</p>
+                <p className={styles.emptyText}>No patients available.</p>
               )}
             </div>
 
             {/* Diet Charts Section */}
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">🍽️ Diet Charts</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <h2 className={styles.sectionTitle}>🍽️ Diet Charts</h2>
+            <div className={styles.gridContainer}>
               {dietCharts.length > 0 ? (
                 dietCharts.map((chart) => (
-                  <div
-                    key={chart.id}
-                    className="bg-white p-4 sm:p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
-                  >
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">🍽️ {chart.mealTime} Meal</h3>
-                    <p className="text-gray-700">🥗 Ingredients: {chart.ingredients}</p>
-                    <p className="text-gray-700">⚠️ Instructions: {chart.instructions}</p>
+                  <div key={chart.id} className={styles.dashboardCard}>
+                    <h3 className={styles.cardTitle}>🍽️ {chart.mealTime} Meal</h3>
+                    <p>🥗 Ingredients: {chart.ingredients}</p>
+                    <p>⚠️ Instructions: {chart.instructions}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-600">No diet charts available.</p>
+                <p className={styles.emptyText}>No diet charts available.</p>
               )}
             </div>
 
             {/* Pantry Staff Section */}
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">👨‍🍳 Pantry Staff</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <h2 className={styles.sectionTitle}>👨‍🍳 Pantry Staff</h2>
+            <div className={styles.gridContainer}>
               {pantryStaff.length > 0 ? (
                 pantryStaff.map((staff) => (
-                  <div
-                    key={staff.id}
-                    className="bg-white p-4 sm:p-6 rounded-xl shadow-lg transform transition-transform hover:scale-105"
-                  >
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{staff.name}</h3>
-                    <p className="text-gray-700">📍 Location: {staff.location}</p>
-                    <p className="text-gray-700">📞 Contact: {staff.phone}</p>
+                  <div key={staff.id} className={styles.dashboardCard}>
+                    <h3 className={styles.cardTitle}>{staff.name}</h3>
+                    <p>📍 Location: {staff.location}</p>
+                    <p>📞 Contact: {staff.phone}</p>
                   </div>
                 ))
               ) : (
-                <p className="text-center text-gray-600">No pantry staff available.</p>
+                <p className={styles.emptyText}>No pantry staff available.</p>
               )}
             </div>
           </>

@@ -113,23 +113,23 @@ export default function Login() {
     placeholder="Enter your password"
   />
           </div>
-          <div className="mt-4">
+          {/* <div className="mt-4">
             <p>
               Don't have an account?{" "}
-              <Link href="/signup">
-                <a className="text-blue-600 hover:underline">Sign Up</a>
+              <Link href="/signup" className="text-blue-600 hover:underline">
+                Sign Up
               </Link>
             </p>
-          </div>
+          </div> */}
           <button type="submit" className="w-full px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-md">
             Login
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
           Don&apos;t have an account?{" "}
-          <a href="/signup" className="text-blue-500 font-medium hover:underline">
+          <Link href="/signup" className="text-blue-500 font-medium hover:underline">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>

@@ -9,19 +9,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const mealsPerDay = await prisma.deliveries.groupBy({
-      by: ["delivered_at"],
-      _count: { id: true }, // Count number of meals delivered
-      where: {
-        delivery_status: "Delivered", // Filter only delivered meals
-        delivered_at: { not: null },
-      },
-      orderBy: {
-        delivered_at: "desc",
-      },
+    // Total meals prepared
+    const totalMeals = await prisma.meals.count();
+
+    // Meals delivered
+    const mealsDelivered = await prisma.deliveries.count({
+      where: { delivery_status: "Delivered" },
     });
 
-    return res.status(200).json(mealsPerDay);
+    // Meals assigned to delivery personnel
+    const assignedMeals = await prisma.deliveries.count({
+      where: { delivery_personnel_id: { not: null } },
+    });
+
+    // Meals pending assignment
+    const unassignedMeals = totalMeals - assignedMeals;
+
+    return res.status(200).json({
+      totalMeals,
+      mealsDelivered,
+      assignedMeals,
+      unassignedMeals,
+    });
   } catch (error) {
     console.error("Error fetching meal analytics:", error);
     return res.status(500).json({ message: "Internal Server Error" });

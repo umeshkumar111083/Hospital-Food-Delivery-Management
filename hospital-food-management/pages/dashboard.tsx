@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { FaUserPlus, FaUtensils, FaTruck, FaUsers, FaSignOutAlt } from "react-icons/fa";
+import dynamic from "next/dynamic";
+import { FaUserPlus, FaUtensils, FaTruck, FaUsers, FaSignOutAlt, FaChartBar } from "react-icons/fa";
+
+// Load Chart only on the client side
+const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 type Patient = {
   id: number;
@@ -31,15 +35,29 @@ type PantryStaff = {
   location: string;
 };
 
+type MealStats = {
+  totalMeals: number;
+  mealsDelivered: number;
+  assignedMeals: number;
+  unassignedMeals: number;
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [dietCharts, setDietCharts] = useState<DietChart[]>([]);
   const [pantryStaff, setPantryStaff] = useState<PantryStaff[]>([]);
+  const [mealStats, setMealStats] = useState<MealStats>({
+    totalMeals: 0,
+    mealsDelivered: 0,
+    assignedMeals: 0,
+    unassignedMeals: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
+    fetchMealAnalytics();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -49,6 +67,7 @@ export default function Dashboard() {
         axios.get("/api/dashboard/diet-charts"),
         axios.get("/api/dashboard/pantry-staff"),
       ]);
+  
       setPatients(patientsRes.data);
       setDietCharts(dietChartsRes.data);
       setPantryStaff(pantryRes.data);
@@ -56,6 +75,15 @@ export default function Dashboard() {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMealAnalytics = async () => {
+    try {
+      const response = await axios.get("/api/dashboard/getMealAnalytics");
+      setMealStats(response.data);
+    } catch (error) {
+      console.error("Error fetching meal analytics:", error);
     }
   };
 
@@ -96,62 +124,69 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Data Sections */}
-        {loading ? (
-          <p className="text-center text-gray-600">Loading dashboard data...</p>
-        ) : (
-          <>
-            {/* Patients Section */}
-            <h2 className="text-2xl font-semibold text-gray-700 mb-3">🧑‍⚕️ Patients</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {patients.length > 0 ? (
-                patients.map((patient) => (
-                  <div key={patient.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">{patient.name}</h3>
-                    <p className="text-gray-600">🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
-                    <p className="text-gray-600">🔹 Age: {patient.age} | Gender: {patient.gender}</p>
-                    <p className="text-gray-600">💊 Disease: {patient.disease || "N/A"}</p>
-                    <p className="text-gray-600">📞 Contact: {patient.contactPhone}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500">No patients available.</p>
-              )}
-            </div>
+        {/* Meal Analytics Section */}
+        <h2 className="text-2xl font-semibold text-gray-700 mb-4 flex items-center">
+          <FaChartBar className="mr-2" /> Meal Delivery Analytics
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white shadow-lg rounded-lg p-4 border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-800">🍽️ Total Meals</h3>
+            <p className="text-gray-600 text-xl font-bold">{mealStats.totalMeals}</p>
+          </div>
+          <div className="bg-green-200 shadow-lg rounded-lg p-4 border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-800">✅ Meals Delivered</h3>
+            <p className="text-gray-600 text-xl font-bold">{mealStats.mealsDelivered}</p>
+          </div>
+          <div className="bg-yellow-200 shadow-lg rounded-lg p-4 border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-800">🚚 Assigned Meals</h3>
+            <p className="text-gray-600 text-xl font-bold">{mealStats.assignedMeals}</p>
+          </div>
+          <div className="bg-red-200 shadow-lg rounded-lg p-4 border border-gray-300">
+            <h3 className="text-lg font-semibold text-gray-800">❌ Unassigned Meals</h3>
+            <p className="text-gray-600 text-xl font-bold">{mealStats.unassignedMeals}</p>
+          </div>
+        </div>
 
-            {/* Diet Charts Section */}
-            <h2 className="text-2xl font-semibold text-gray-700 mb-3">🍽️ Diet Charts</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {dietCharts.length > 0 ? (
-                dietCharts.map((chart) => (
-                  <div key={chart.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">🍽️ {chart.mealTime} Meal</h3>
-                    <p className="text-gray-600">🥗 Ingredients: {chart.ingredients}</p>
-                    <p className="text-gray-600">⚠️ Instructions: {chart.instructions}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500">No diet charts available.</p>
-              )}
+        {/* Patients Section */}
+        <h2 className="text-2xl font-semibold text-gray-700 mb-3">🧑‍⚕️ Patients</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {patients.map((patient) => (
+            <div key={patient.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">{patient.name}</h3>
+              <p className="text-gray-600">🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
+              <p className="text-gray-600">🔹 Age: {patient.age} | Gender: {patient.gender}</p>
             </div>
+          ))}
+        </div>
 
-            {/* Pantry Staff Section */}
-            <h2 className="text-2xl font-semibold text-gray-700 mb-3">👨‍🍳 Pantry Staff</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {pantryStaff.length > 0 ? (
-                pantryStaff.map((staff) => (
-                  <div key={staff.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-800">{staff.name}</h3>
-                    <p className="text-gray-600">📍 Location: {staff.location}</p>
-                    <p className="text-gray-600">📞 Contact: {staff.phone}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500">No pantry staff available.</p>
-              )}
+        {/* Diet Charts Section */}
+        {/* Diet Charts Section */}
+        <h2 className="text-2xl font-semibold text-gray-700 mb-3">🍽️ Diet Charts</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {dietCharts.length > 0 ? (
+            dietCharts.map((chart) => (
+              <div key={chart.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800">🍽️ {chart.mealTime} Meal</h3>
+                <p className="text-gray-600">🥗 Ingredients: {chart.ingredients}</p>
+                <p className="text-gray-600">⚠️ Instructions: {chart.instructions || "No special instructions"}</p>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500">No diet charts available.</p>
+          )}
+        </div>
+
+        {/* Pantry Staff Section */}
+        <h2 className="text-2xl font-semibold text-gray-700 mb-3">👨‍🍳 Pantry Staff</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          {pantryStaff.map((staff) => (
+            <div key={staff.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-800">{staff.name}</h3>
+              <p className="text-gray-600">📍 Location: {staff.location}</p>
+              <p className="text-gray-600">📞 Contact: {staff.phone}</p>
             </div>
-          </>
-        )}
+          ))}
+        </div>
       </div>
     </main>
   );

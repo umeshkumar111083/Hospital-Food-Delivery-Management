@@ -39,7 +39,21 @@ export default function Login() {
       if (decoded.role === "hospital_manager") {
         router.push("/dashboard");
       } else if (decoded.role === "pantry_staff") {
-        router.push("/pantrystaffdashboard");
+        // ✅ Check if pantry staff profile is already filled
+        try {
+          const profileCheck = await axios.get(`/api/pantry-staff/status?userId=${decoded.id}`, {
+            headers: { Authorization: `Bearer ${data.token}` },
+          });
+
+          if (profileCheck.data.detailsFilled) {
+            router.push("/pantrystaffdashboard");
+          } else {
+            router.push(`/complete-pantry-profile?userId=${decoded.id}&email=${decoded.email}`);
+          }
+        } catch (error) {
+          console.error("Pantry profile check failed, redirecting to complete profile");
+          router.push(`/complete-pantry-profile?userId=${decoded.id}&email=${decoded.email}`);
+        }
       } else if (decoded.role === "delivery_personnel") {
         // ✅ Check if delivery personnel profile is already filled
         try {
@@ -53,7 +67,7 @@ export default function Login() {
             router.push(`/complete-profile?userId=${decoded.id}&email=${decoded.email}`);
           }
         } catch (error) {
-          console.error("Profile check failed, redirecting to complete profile");
+          console.error("Delivery profile check failed, redirecting to complete profile");
           router.push(`/complete-profile?userId=${decoded.id}&email=${decoded.email}`);
         }
       } else {

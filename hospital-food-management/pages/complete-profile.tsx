@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { GetServerSideProps } from "next";
 import axios from "axios";
@@ -8,19 +8,43 @@ const CompleteProfile = ({ token, userId, email }: { token: string; userId: numb
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true); // ✅ Added loading state
   const router = useRouter();
+
+  // ✅ Check if details already exist
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const response = await axios.get(`/api/delivery_personnel/status?userId=${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.status === 200 && response.data.detailsFilled) {
+          console.log("✅ Profile exists. Redirecting...");
+          router.push("/deliverydashboard");
+        } else {
+          setLoading(false); // ✅ Only show form if details are missing
+        }
+      } catch (error) {
+        console.error("❌ Error checking profile:", error);
+        setLoading(false); // ✅ Show form if error occurs
+      }
+    };
+
+    checkProfile();
+  }, [userId, token, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-  
+
     try {
       const response = await axios.post(
         "/api/delivery_personnel/save", // ✅ Fixed API path
-        { name, phone, userId }, // ❌ Removed 'location' (not in DB)
+        { name, phone, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       if (response.status === 201) {
         alert("✅ Profile Completed Successfully!");
         router.push("/deliverydashboard");
@@ -29,6 +53,15 @@ const CompleteProfile = ({ token, userId, email }: { token: string; userId: numb
       setError(err.response?.data?.error || "❌ Failed to save details. Try again.");
     }
   };
+
+  // ✅ Show a loading screen while checking profile status
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-xl text-gray-600">Checking profile details...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -55,6 +88,7 @@ const CompleteProfile = ({ token, userId, email }: { token: string; userId: numb
   );
 };
 
+// ✅ Check if the user is logged in
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { req, query } = context;
   const cookies = parse(req.headers.cookie || "");

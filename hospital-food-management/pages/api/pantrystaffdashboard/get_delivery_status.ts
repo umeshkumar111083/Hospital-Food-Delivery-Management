@@ -10,22 +10,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { meal_id } = req.query;
-    if (!meal_id) {
-      return res.status(400).json({ error: "Meal ID is required" });
+    
+    // ✅ Ensure `meal_id` is present
+    if (!meal_id || isNaN(Number(meal_id))) {
+      return res.status(400).json({ error: "Meal ID is required and must be a number" });
     }
 
-    // ✅ Use `findFirst` instead of `findUnique`
+    // ✅ Find the delivery record
     const delivery = await prisma.deliveries.findFirst({
       where: { meal_id: Number(meal_id) },
       include: {
         delivery_personnel: {
-          select: { name: true, id: true, phone: true }, // ✅ Fetch personnel details
+          select: { name: true, id: true, phone: true },
         },
       },
     });
 
     if (!delivery) {
-      return res.status(404).json({ error: "No delivery record found" });
+      return res.status(404).json({ error: "No delivery record found for this meal" });
     }
 
     return res.status(200).json({

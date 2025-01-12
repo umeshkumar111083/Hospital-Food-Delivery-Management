@@ -116,11 +116,14 @@ export default function Dashboard() {
           <button onClick={() => router.push("/add-diet-chart")} className="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg shadow-lg transition">
             <FaUtensils className="mr-2" /> Add Diet Chart
           </button>
-          <button onClick={() => router.push("/add-pantry-staff")} className="flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg shadow-lg transition">
+          {/* <button onClick={() => router.push("/add-pantry-staff")} className="flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg shadow-lg transition">
             <FaUsers className="mr-2" /> Add Pantry Staff
-          </button>
+          </button> */}
           <button onClick={() => router.push("/delivery-status")} className="flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg shadow-lg transition">
             <FaTruck className="mr-2" /> Delivery Details
+          </button>
+          <button onClick={() => router.push("/assign-meal")} className="flex items-center justify-center bg-teal-500 hover:bg-teal-600 text-white p-3 rounded-lg shadow-lg transition">
+            <FaUtensils className="mr-2" /> Assign Meal
           </button>
         </div>
 

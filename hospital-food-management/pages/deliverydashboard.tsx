@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { parse } from "cookie";
 import axios from "axios";
+import { useRouter } from "next/router";
+import { FaSignOutAlt } from "react-icons/fa";
 
 // ✅ Task Type
 type Task = {
@@ -56,7 +58,9 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [deliveryNotes, setDeliveryNotes] = useState<{ [key: number]: string }>({});
+  const router = useRouter();
 
+  // ✅ Fetch Delivery Tasks
   useEffect(() => {
     async function fetchTasks() {
       try {
@@ -77,6 +81,7 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
     fetchTasks();
   }, [token, deliveryPersonnelId]);
 
+  // ✅ Handle Notes Input Change
   const handleNoteChange = (taskId: number, note: string) => {
     setDeliveryNotes((prevNotes) => ({
       ...prevNotes,
@@ -84,6 +89,7 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
     }));
   };
 
+  // ✅ Mark Delivery as Done
   const markDeliveryDone = async (taskId: number) => {
     try {
       const notes = deliveryNotes[taskId] || "No additional notes provided";
@@ -106,10 +112,30 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
     }
   };
 
+  // ✅ Logout Function
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/auth/logout");
+      router.push("/login");
+    } catch (error) {
+      console.error("❌ Logout failed:", error);
+    }
+  };
+
   return (
     <div className="p-6 min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 text-white">
-      <h1 className="text-4xl font-extrabold text-center mb-8">🚚 Delivery Dashboard</h1>
+      {/* ✅ Header with Logout */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-extrabold text-center">🚚 Delivery Dashboard</h1>
+        <button
+          onClick={handleLogout}
+          className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition"
+        >
+          <FaSignOutAlt className="mr-2" /> Logout
+        </button>
+      </div>
 
+      {/* ✅ Loading State */}
       {loading ? (
         <p className="text-center text-white text-lg animate-pulse">Loading tasks...</p>
       ) : tasks.length === 0 ? (

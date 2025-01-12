@@ -18,6 +18,7 @@ export default function AddPantryStaff() {
 
   const router = useRouter();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // ✅ Handle Input Change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,81 +29,85 @@ export default function AddPantryStaff() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     try {
-      await axios.post("/api/pantry-staff", form);
+      await axios.post("/api/dashboard/addPantryStaff", form, {
+        headers: { "Content-Type": "application/json" },
+      });
       router.push("/dashboard");
     } catch (err) {
       setError("Failed to add pantry staff. Try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-600 px-4">
-      <div className="relative w-full max-w-4xl bg-white bg-opacity-90 backdrop-blur-lg p-8 rounded-xl shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-green-700 px-6">
+      <div className="w-full max-w-3xl bg-white bg-opacity-95 shadow-lg rounded-xl p-8 relative">
         
         {/* Back to Dashboard Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className="absolute top-4 left-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold shadow-md hover:bg-gray-400 hover:scale-105 transition-transform"
+          className="absolute top-4 left-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold shadow-md hover:bg-gray-300 transition-transform hover:scale-105"
         >
           🔙 Back
         </button>
 
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">👨‍🍳 Add Pantry Staff</h1>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-6 text-center">👨‍🍳 Add Pantry Staff</h1>
 
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-4">
-            {/* Name */}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
+          {/* Name Field */}
+          <div className="relative">
+            <label className="text-gray-700 font-semibold">Staff Name</label>
             <input
               type="text"
               name="name"
-              placeholder="Staff Name"
               value={form.name}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
               required
+              className="mt-1 p-3 w-full border rounded-lg shadow-sm focus:ring focus:ring-green-300 text-black"
             />
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-4">
-            {/* Contact Number */}
+          {/* Phone Field */}
+          <div className="relative">
+            <label className="text-gray-700 font-semibold">Phone Number</label>
             <input
               type="text"
               name="phone"
-              placeholder="Phone Number"
               value={form.phone}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
               required
+              className="mt-1 p-3 w-full border rounded-lg shadow-sm focus:ring focus:ring-green-300 text-black"
             />
           </div>
 
-          {/* Full Width */}
-          <div className="col-span-1 md:col-span-2">
-            {/* Location */}
+          {/* Location Field */}
+          <div className="relative">
+            <label className="text-gray-700 font-semibold">Kitchen / Pantry Location</label>
             <input
               type="text"
               name="location"
-              placeholder="Kitchen / Pantry Location"
               value={form.location}
               onChange={handleChange}
-              className="w-full p-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
               required
+              className="mt-1 p-3 w-full border rounded-lg shadow-sm focus:ring focus:ring-green-300 text-black"
             />
           </div>
 
-          {/* Submit Button (Full Width) */}
-          <div className="col-span-1 md:col-span-2">
+          {/* Submit Button */}
+          <div className="flex justify-center">
             <button
               type="submit"
-              className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-blue-600 hover:scale-105 transition-transform"
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold shadow-md hover:bg-green-700 transition-all"
+              disabled={loading}
             >
-              ✅ Submit
+              {loading ? "Submitting..." : "✅ Submit"}
             </button>
           </div>
         </form>

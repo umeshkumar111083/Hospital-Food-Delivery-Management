@@ -129,8 +129,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // ✅ Check if pantry staff details already exist in DB
-    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/pantry-staff/status?userId=${decoded.id}`);
-
+    const response = await axios.get(`/api/pantry-staff/status?userId=${decoded.id}`);
     if (response.data.detailsFilled) {
       return { redirect: { destination: "/pantrystaffdashboard", permanent: false } };
     }

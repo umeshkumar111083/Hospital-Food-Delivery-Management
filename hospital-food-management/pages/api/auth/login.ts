@@ -15,25 +15,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // ✅ Fetch user by email
     const user = await prisma.users.findUnique({ where: { email } });
-
+  
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
-
+  
     // ✅ Generate JWT Token
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: "1h" });
-
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      SECRET,
+      { expiresIn: "1h" }
+    );
+  
     // ✅ Set JWT in HTTP-only cookie
-    res.setHeader("Set-Cookie", serialize("id_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60, // 1 hour
-    }));
-
+    res.setHeader(
+      "Set-Cookie",
+      serialize("id_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 60 * 60, // 1 hour
+      })
+    );
+  
     res.status(200).json({ message: "Login successful", token });
-  } catch (error) {
+  } catch {
+    // Removed 'error' since it is not used
     res.status(500).json({ error: "Internal Server Error" });
   }
 }

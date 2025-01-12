@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const dietCharts = await prisma.diet_charts.findMany();
     res.status(200).json(dietCharts);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error fetching diet charts" });
   }
 }

@@ -29,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ✅ Decode token to get user ID and role
     const decoded: DecodedToken = jwtDecode(token);
     const userId = decoded.id;
-    const email = decoded.email;
+    // const email = decoded.email;
 
     if (decoded.role !== "pantry_staff") {
       return res.status(403).json({ error: "Forbidden: User is not pantry staff" });

@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const patients = await prisma.patients.findMany();
     res.status(200).json(patients);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error fetching patients" });
   }
 }

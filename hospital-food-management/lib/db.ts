@@ -1,4 +1,4 @@
-import {Pool}  from "pg";
+import { Pool } from "pg";
 
 const pool = new Pool({
   user: process.env.DB_USER || "postgres",
@@ -8,8 +8,7 @@ const pool = new Pool({
   port: Number(process.env.DB_PORT) || 5432,
 });
 
-export default {
-  query: (text: string, params?: any[]) => pool.query(text, params),
-};
+// Create a named export for the query function to avoid the anonymous export warning
+export const dbQuery = (text: string, params?: unknown[]) => pool.query(text, params);
 
-// psql -h localhost -p 5432 -U postgres -d hospital_food_management
+export default pool; // Export the pool for other usage if needed

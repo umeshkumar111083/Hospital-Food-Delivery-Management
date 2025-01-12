@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link"; // ✅ Import Link from next/link
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -82,9 +83,9 @@ export default function Signup() {
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-500 font-medium hover:underline">
-            Login
-          </a>
+          <Link href="/login">
+            <a className="text-blue-500 font-medium hover:underline">Login</a>
+          </Link>
         </p>
       </div>
     </div>

@@ -70,7 +70,14 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const sortedTasks = response.data.sort((a: Task, b: Task) => (a.status === "Delivered" ? 1 : -1));
+        const sortedTasks = response.data.sort((a: Task, b: Task) => {
+          if (a.status === "Delivered" && b.status !== "Delivered") {
+            return 1;
+          } else if (a.status !== "Delivered" && b.status === "Delivered") {
+            return -1;
+          }
+          return 0; // Keep other tasks in their current order
+        });
         setTasks(sortedTasks);
       } catch (error) {
         console.error("Error fetching delivery tasks:", error);

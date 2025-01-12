@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { FaArrowLeft, FaTruck, FaUserNurse, FaClock, FaStickyNote, FaCheckCircle } from "react-icons/fa";
+import { FaArrowLeft, FaTruck, FaUserNurse, FaClock, FaStickyNote } from "react-icons/fa";
 
 type Delivery = {
   id: number;

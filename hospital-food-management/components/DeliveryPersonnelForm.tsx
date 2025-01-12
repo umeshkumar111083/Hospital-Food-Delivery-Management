@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios"; // Import AxiosError
 
 export default function DeliveryPersonnelForm({ email, userId, onClose }: { email: string; userId: number; onClose: () => void }) {
   const [name, setName] = useState("");
@@ -19,8 +19,14 @@ export default function DeliveryPersonnelForm({ email, userId, onClose }: { emai
       });
       alert("Details saved successfully.");
       onClose(); // Close the popup after successful submission
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to save details. Please try again.");
+    } catch (err: unknown) { // Use `unknown` to handle any error type safely
+      if (axios.isAxiosError(err)) { // Check if error is an AxiosError
+        setError(
+          err.response?.data?.error || "Failed to save details. Please try again."
+        );
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 

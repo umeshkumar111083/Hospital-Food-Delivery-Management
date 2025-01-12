@@ -30,13 +30,14 @@ export default function AddPantryStaff() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     try {
       await axios.post("/api/dashboard/addPantryStaff", form, {
         headers: { "Content-Type": "application/json" },
       });
       router.push("/dashboard");
-    } catch (err) {
+    } catch {
+      // Removed 'err' since it is not used
       setError("Failed to add pantry staff. Try again.");
     } finally {
       setLoading(false);

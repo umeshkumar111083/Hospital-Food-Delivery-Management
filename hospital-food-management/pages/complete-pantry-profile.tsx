@@ -12,7 +12,7 @@ type DecodedToken = {
   exp: number;
 };
 
-const CompletePantryProfile = ({ token, userId, email }: { token: string; userId: number; email: string }) => {
+const CompletePantryProfile = ({ email }: { token: string; userId: number; email: string }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
@@ -25,12 +25,18 @@ const CompletePantryProfile = ({ token, userId, email }: { token: string; userId
   
     try {
       const response = await axios.post("/api/pantry-staff/save", { name, phone, location });
-  
+    
       if (response.data.redirect) {
         router.push(response.data.redirect);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "❌ Failed to save details. Try again.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || "❌ Failed to save details. Try again.");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("❌ An unknown error occurred.");
+      }
     }
   };
 

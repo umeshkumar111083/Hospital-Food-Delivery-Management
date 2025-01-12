@@ -52,16 +52,16 @@ export default function AddDietChart() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
+  
     try {
       await axios.post("/api/dashboard/dietcharts", {
         ...form,
         patientId: Number(form.patientId),
       });
-
+  
       router.push("/dashboard");
-    } catch (err) {
-      setError("Failed to add diet chart. Try again.");
+    } catch {
+      setError("Failed to add diet chart. Try again."); // Removed 'err' as it was unused
     } finally {
       setLoading(false);
     }

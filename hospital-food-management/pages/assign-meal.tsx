@@ -45,15 +45,22 @@ const AssignMeal = () => {
       const response = await axios.get("/api/dashboard/dietcharts", {
         headers: { "Cache-Control": "no-cache" },
       });
-
+    
       if (response.data && response.data.dietCharts) {
         console.log("Diet charts received:", response.data.dietCharts);
         setDietCharts(response.data.dietCharts);
       } else {
         console.warn("No diet charts found.");
       }
-    } catch (error) {
-      console.error("Error fetching diet charts:", error.response?.data || error.message);
+    } catch (error: unknown) {
+      // Check if the error is an AxiosError
+      if (axios.isAxiosError(error)) {
+        console.error("Error fetching diet charts:", error.response?.data || error.message);
+      } else if (error instanceof Error) {
+        console.error("Unexpected error:", error.message);
+      } else {
+        console.error("An unknown error occurred.");
+      }
     } finally {
       setLoadingDietCharts(false);
     }
@@ -72,16 +79,22 @@ const AssignMeal = () => {
         diet_chart_id: selectedDietChart,
         preparation_status: preparationStatus,
       });
-
+    
       if (response.status === 201) {
         setMessage("✅ Meal assigned successfully!");
         setSelectedPantryStaff("");
         setSelectedDietChart("");
         setPreparationStatus("Pending");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error assigning meal:", error);
-      setMessage(error.response?.data?.error || "❌ Failed to assign meal. Try again.");
+    
+      // Check if the error is an AxiosError
+      if (axios.isAxiosError(error)) {
+        setMessage(error.response?.data?.error || "❌ Failed to assign meal. Try again.");
+      } else {
+        setMessage("❌ An unexpected error occurred. Try again.");
+      }
     }
   };
 

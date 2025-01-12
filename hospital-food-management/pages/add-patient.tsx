@@ -62,7 +62,8 @@ export default function AddPatient() {
         headers: { "Content-Type": "application/json" },
       });
       router.push("/dashboard");
-    } catch (err) {
+    } catch {
+      // Removed 'err' since it is not used
       setError("Failed to add patient. Try again.");
     } finally {
       setLoading(false);

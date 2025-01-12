@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import Link from "next/link";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -44,30 +45,39 @@ export default function Login() {
           const profileCheck = await axios.get(`/api/pantry-staff/status?userId=${decoded.id}`, {
             headers: { Authorization: `Bearer ${data.token}` },
           });
-
+        
           if (profileCheck.data.detailsFilled) {
             router.push("/pantrystaffdashboard");
           } else {
             router.push(`/complete-pantry-profile?userId=${decoded.id}&email=${decoded.email}`);
           }
-        } catch (error) {
-          console.error("Pantry profile check failed, redirecting to complete profile");
+        } catch (error: unknown) {
+          if (axios.isAxiosError(error)) {
+            console.error("Axios error during pantry profile check:", error.response?.data || error.message);
+          } else {
+            console.error("Unknown error during pantry profile check:", error);
+          }
           router.push(`/complete-pantry-profile?userId=${decoded.id}&email=${decoded.email}`);
         }
-      } else if (decoded.role === "delivery_personnel") {
+      } 
+      else if (decoded.role === "delivery_personnel") {
         // ✅ Check if delivery personnel profile is already filled
         try {
           const profileCheck = await axios.get(`/api/delivery-personnel/status?userId=${decoded.id}`, {
             headers: { Authorization: `Bearer ${data.token}` },
           });
-
+      
           if (profileCheck.data.detailsFilled) {
             router.push("/deliverydashboard");
           } else {
             router.push(`/complete-profile?userId=${decoded.id}&email=${decoded.email}`);
           }
-        } catch (error) {
-          console.error("Delivery profile check failed, redirecting to complete profile");
+        } catch (error: unknown) {
+          if (axios.isAxiosError(error)) {
+            console.error("Axios error during delivery profile check:", error.response?.data || error.message);
+          } else {
+            console.error("Unknown error during delivery profile check:", error);
+          }
           router.push(`/complete-profile?userId=${decoded.id}&email=${decoded.email}`);
         }
       } else {
@@ -93,8 +103,23 @@ export default function Login() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg shadow-sm" placeholder="Enter your email" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg shadow-sm" placeholder="Enter your password" />
+  <label className="block text-sm font-medium text-gray-700">Password</label>
+  <input
+    type="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg shadow-sm"
+    placeholder="Enter your password"
+  />
+          </div>
+          <div className="mt-4">
+            <p>
+              Don't have an account?{" "}
+              <Link href="/signup">
+                <a className="text-blue-600 hover:underline">Sign Up</a>
+              </Link>
+            </p>
           </div>
           <button type="submit" className="w-full px-4 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-md">
             Login

@@ -44,13 +44,19 @@ const CompleteProfile = ({ token, userId, email }: { token: string; userId: numb
         { name, phone, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
+    
       if (response.status === 201) {
         alert("✅ Profile Completed Successfully!");
         router.push("/deliverydashboard");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "❌ Failed to save details. Try again.");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.error || "❌ Failed to save details. Try again.");
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("❌ An unknown error occurred.");
+      }
     }
   };
 

@@ -53,21 +53,21 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
 
   useEffect(() => {
     if (!token) return;
-
+  
     const fetchUserId = async () => {
       try {
         const decoded: DecodedToken = jwtDecode(token);
-
+  
         if (decoded.role !== "pantry_staff") {
           console.warn("⚠️ Unauthorized access detected. Redirecting...");
           router.replace("/unauthorized");
           return;
         }
-
+  
         const staffResponse = await axios.get(`/api/pantry-staff/get?id=${decoded.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+  
         if (staffResponse.data?.pantry_staff_id) {
           console.log("✅ Pantry Staff ID:", staffResponse.data.pantry_staff_id);
           setPantryStaffId(staffResponse.data.pantry_staff_id);
@@ -80,9 +80,9 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
         router.replace("/login");
       }
     };
-
+  
     fetchUserId();
-  }, [token]);
+  }, [token, router]); // ✅ Add 'router' to the dependency array
 
   useEffect(() => {
     if (!pantryStaffId) return;
@@ -100,11 +100,11 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
-    
+  
         console.log("🔹 Tasks Response:", tasksResponse.data);
         console.log("🔹 Personnel Response:", personnelResponse.data);
         console.log("🔹 Assigned Personnel Response:", assignedPersonnelResponse.data);
-    
+  
         // ✅ Map assigned delivery personnel to their respective meal IDs
         const assignedMap = new Map<number, { mealId: number; deliveryPersonnelName: string }>(
           assignedPersonnelResponse.data.map((a: { mealId: number; deliveryPersonnelName: string }) => [
@@ -112,7 +112,7 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
             a,
           ])
         );
-    
+  
         setTasks(
           tasksResponse.data.map((task: Task) => ({
             ...task,
@@ -120,7 +120,7 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
             deliveryPersonnelName: assignedMap.get(task.id)?.deliveryPersonnelName || null,
           }))
         );
-    
+  
         setPersonnel(personnelResponse.data);
       } catch (error) {
         console.error("❌ Error fetching data:", error);
@@ -130,7 +130,7 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
     };
   
     fetchData();
-  }, [pantryStaffId]);
+  }, [pantryStaffId, token]); // ✅ Add 'token' to the dependency array
 
   const assignMeal = async (mealId: number) => {
     if (personnel.length === 0) {

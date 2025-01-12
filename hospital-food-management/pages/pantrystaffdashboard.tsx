@@ -22,9 +22,9 @@ type Task = {
   patientName: string;
   roomNumber: string | number;
   bedNumber: string | number;
+  deliveryPersonnelName?: string | null; // ✅ Add this line
   dietChart: string;
   deliveryStatus?: string | null;
-  deliveryPersonnelName?: string | null;
   deliveryPersonnelId?: number | null;
   preparationStatus: string; // Added for meal preparation status
 };
@@ -106,12 +106,17 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
         console.log("🔹 Assigned Personnel Response:", assignedPersonnelResponse.data);
     
         // ✅ Map assigned delivery personnel to their respective meal IDs
-        const assignedMap = new Map(assignedPersonnelResponse.data.map((a) => [a.mealId, a]));
+        const assignedMap = new Map<number, { mealId: number; deliveryPersonnelName: string }>(
+          assignedPersonnelResponse.data.map((a: { mealId: number; deliveryPersonnelName: string }) => [
+            a.mealId,
+            a,
+          ])
+        );
     
         setTasks(
           tasksResponse.data.map((task: Task) => ({
             ...task,
-            preparationStatus: task.status || "Pending",
+            preparationStatus: task.preparationStatus || task.status || "Pending", // ✅ Ensure correct status assignment
             deliveryPersonnelName: assignedMap.get(task.id)?.deliveryPersonnelName || null,
           }))
         );

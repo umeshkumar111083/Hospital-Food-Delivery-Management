@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { parse } from "cookie";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { GetServerSideProps } from "next";
+import { parse } from "cookie";
 import { FaSignOutAlt } from "react-icons/fa";
 
-// ✅ Define Task Type
+// ✅ Ensure Axios Sends Cookies Globally
+axios.defaults.withCredentials = true;
+
+// ✅ Define Token & Data Types
+type DecodedToken = {
+  id: number;
+  email: string;
+  role: string;
+};
+
 type Task = {
   id: number;
   status: string;
@@ -16,97 +26,82 @@ type Task = {
   deliveryStatus?: string | null;
   deliveryPersonnelName?: string | null;
   deliveryPersonnelId?: number | null;
+  preparationStatus: string; // Added for meal preparation status
 };
 
-// ✅ Define Delivery Personnel Type
 type DeliveryPersonnel = {
   id: number;
   name: string;
   phone: string;
 };
 
-// ✅ Define Decoded Token Type
-type DecodedToken = {
-  id: number;
-  email: string;
-  role: string;
-};
-
-const PantryStaffDashboard = () => {
+const PantryStaffDashboard = ({ token }: { token: string }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [personnel, setPersonnel] = useState<DeliveryPersonnel[]>([]);
   const [selectedPersonnel, setSelectedPersonnel] = useState<{ [key: number]: number }>({});
+  const [selectedStatus, setSelectedStatus] = useState<{ [key: number]: string }>({});
   const [pantryStaffId, setPantryStaffId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // ✅ Decode Token & Fetch Pantry Staff ID
   useEffect(() => {
+    if (typeof window !== "undefined" && !token) {
+      console.warn("⚠️ No token found, redirecting to login.");
+      router.replace("/login");
+    }
+  }, [token, router]);
+
+  useEffect(() => {
+    if (!token) return;
+
     const fetchUserId = async () => {
       try {
-        const cookies = parse(document.cookie);
-        if (!cookies.id_token) {
-          router.push("/login");
-          return;
-        }
+        const decoded: DecodedToken = jwtDecode(token);
 
-        const decoded: DecodedToken = jwtDecode(cookies.id_token);
         if (decoded.role !== "pantry_staff") {
-          router.push("/unauthorized");
+          console.warn("⚠️ Unauthorized access detected. Redirecting...");
+          router.replace("/unauthorized");
           return;
         }
 
-        // ✅ Fetch Pantry Staff ID from API
-        const staffResponse = await axios.get(`/api/pantry-staff/get?id=${decoded.id}`);
-        if (staffResponse.data && staffResponse.data.pantry_staff_id) {
+        const staffResponse = await axios.get(`/api/pantry-staff/get?id=${decoded.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (staffResponse.data?.pantry_staff_id) {
+          console.log("✅ Pantry Staff ID:", staffResponse.data.pantry_staff_id);
           setPantryStaffId(staffResponse.data.pantry_staff_id);
         } else {
-          console.warn("Pantry staff ID not found for user.");
-          router.push("/complete-pantry-profile");
+          console.warn("⚠️ Pantry staff ID not found. Redirecting to profile completion.");
+          router.replace("/complete-pantry-profile");
         }
       } catch (error) {
-        console.error("Error fetching pantry staff ID:", error);
-        router.push("/login");
+        console.error("❌ Error fetching pantry staff ID:", error);
+        router.replace("/login");
       }
     };
 
     fetchUserId();
-  }, []);
+  }, [token]);
 
-  // ✅ Fetch Tasks & Personnel
   useEffect(() => {
-    if (!pantryStaffId) return; // ✅ Ensure we have a valid pantryStaffId
+    if (!pantryStaffId) return;
 
     const fetchData = async () => {
       try {
-        // ✅ Fetch meal preparation tasks dynamically
-        const tasksResponse = await axios.get(`/api/pantrystaffdashboard/tasks?pantry_staff_id=${pantryStaffId}`);
+        const [tasksResponse, personnelResponse] = await Promise.all([
+          axios.get(`/api/pantrystaffdashboard/tasks?pantry_staff_id=${pantryStaffId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`/api/pantrystaffdashboard/delivery_personnel`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-        // ✅ Fetch delivery status dynamically
-        const tasksWithDeliveryStatus = await Promise.all(
-          tasksResponse.data.map(async (task: Task) => {
-            try {
-              const deliveryResponse = await axios.get(`/api/pantrystaffdashboard/get_delivery_status?meal_id=${task.id}`);
-              return { ...task, ...deliveryResponse.data };
-            } catch (error: any) {
-              if (error.response?.status === 404) {
-                console.warn(`No delivery record found for meal ${task.id}. Skipping.`);
-                return { ...task, deliveryStatus: "Not Assigned" };
-              } else {
-                console.error(`Error fetching delivery status for meal ${task.id}:`, error);
-                return task;
-              }
-            }
-          })
-        );
-
-        setTasks(tasksWithDeliveryStatus);
-
-        // ✅ Fetch delivery personnel
-        const personnelResponse = await axios.get(`/api/pantrystaffdashboard/delivery_personnel`);
+        setTasks(tasksResponse.data);
         setPersonnel(personnelResponse.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("❌ Error fetching tasks:", error);
       } finally {
         setLoading(false);
       }
@@ -115,16 +110,16 @@ const PantryStaffDashboard = () => {
     fetchData();
   }, [pantryStaffId]);
 
-  // ✅ Assign Meal to Delivery Personnel
   const assignMeal = async (mealId: number) => {
     const deliveryPersonnelId = selectedPersonnel[mealId];
-    if (!deliveryPersonnelId) return alert("Select a delivery personnel first!");
+    if (!deliveryPersonnelId) return alert("❌ Select a delivery personnel first!");
 
     try {
-      await axios.post(`/api/pantrystaffdashboard/assign_meal`, {
-        meal_id: mealId,
-        delivery_personnel_id: deliveryPersonnelId,
-      });
+      await axios.post(
+        `/api/pantrystaffdashboard/assign_meal`,
+        { meal_id: mealId, delivery_personnel_id: deliveryPersonnelId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       alert("✅ Meal assigned successfully!");
       setTasks((prev) =>
@@ -139,23 +134,48 @@ const PantryStaffDashboard = () => {
         )
       );
     } catch (error) {
-      console.error("Error assigning meal:", error);
+      console.error("❌ Error assigning meal:", error);
     }
   };
 
-  // ✅ Logout Function
+  const updatePreparationStatus = async (mealId: number) => {
+    const newStatus = selectedStatus[mealId];
+    if (!newStatus) return alert("❌ Select a valid preparation status!");
+
+    try {
+      await axios.put(
+        `/api/pantrystaffdashboard/update_meal_status`,
+        { meal_id: mealId, status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert("✅ Preparation status updated successfully!");
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === mealId
+            ? {
+                ...task,
+                preparationStatus: newStatus,
+              }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error("❌ Error updating preparation status:", error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await axios.post("/api/auth/logout");
-      router.push("/login");
+      router.replace("/login");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("❌ Logout failed:", error);
     }
   };
 
   return (
     <div className="p-6 min-h-screen bg-gradient-to-br from-green-500 to-green-700 text-white">
-      {/* ✅ Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-extrabold">👨‍🍳 Pantry Staff Dashboard</h1>
         <button
@@ -173,41 +193,80 @@ const PantryStaffDashboard = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {tasks.map((task) => (
-            <div key={task.id} className="p-6 bg-white text-black rounded-lg shadow-md transform hover:scale-105 transition-all">
+            <div key={task.id} className="p-6 bg-white text-black rounded-lg shadow-md">
               <p className="font-bold text-xl">Patient: {task.patientName}</p>
               <p>Room: {task.roomNumber}, Bed: {task.bedNumber}</p>
               <p>Diet Chart: {task.dietChart}</p>
+              <p>Preparation Status: {task.preparationStatus}</p>
 
-              {/* ✅ Assign Delivery Personnel */}
-              {task.status === "Completed" && !task.deliveryStatus && (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700">Assign to:</label>
-                  <select
-                    className="w-full p-2 border rounded-md"
-                    onChange={(e) => setSelectedPersonnel({ ...selectedPersonnel, [task.id]: Number(e.target.value) })}
-                  >
-                    <option value="">Select Personnel</option>
-                    {personnel.map((person) => (
-                      <option key={person.id} value={person.id}>
-                        {person.name} ({person.phone})
-                      </option>
-                    ))}
-                  </select>
+              {/* Change Preparation Status */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">Change Preparation Status:</label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={selectedStatus[task.id] || ""}
+                  onChange={(e) =>
+                    setSelectedStatus({ ...selectedStatus, [task.id]: e.target.value })
+                  }
+                >
+                  <option value="">Select Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
 
-                  <button
-                    className="mt-3 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-all"
-                    onClick={() => assignMeal(task.id)}
-                  >
-                    🚀 Assign Meal
-                  </button>
-                </div>
-              )}
+                <button
+                  className="mt-3 w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition-all"
+                  onClick={() => updatePreparationStatus(task.id)}
+                >
+                  🔄 Update Status
+                </button>
+              </div>
+
+              {/* Assign Delivery Personnel */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">Assign Delivery Personnel:</label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={selectedPersonnel[task.id] || ""}
+                  onChange={(e) =>
+                    setSelectedPersonnel({ ...selectedPersonnel, [task.id]: Number(e.target.value) })
+                  }
+                >
+                  <option value="">Select Personnel</option>
+                  {personnel.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.name} ({person.phone})
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  className="mt-3 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
+                  onClick={() => assignMeal(task.id)}
+                >
+                  🚀 Assign Meal
+                </button>
+              </div>
             </div>
           ))}
         </div>
       )}
     </div>
   );
+};
+
+// ✅ Fixed `getServerSideProps`
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { req } = context;
+  const cookies = parse(req.headers.cookie || "");
+  const token = cookies.id_token;
+
+  if (!token) {
+    return { redirect: { destination: "/login", permanent: false } };
+  }
+
+  return { props: { token } };
 };
 
 export default PantryStaffDashboard;

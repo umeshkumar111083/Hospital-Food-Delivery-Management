@@ -20,7 +20,6 @@
     "next": "15.1.4",
     "next-auth": "^4.24.11",
     "pg": "^8.13.1",
-    "punycode": "^2.3.1",
     "react": "^18.2.0",
     "react-apexcharts": "^1.7.0",
     "react-dom": "^18.2.0",
@@ -46,7 +45,7 @@
     "typescript": "^5.4.2"
   },
   "engines": {
-    "node": "22.x"
+    "node": "22.x" 
   },
   "main": "index.js",
   "license": "MIT"

@@ -19,14 +19,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const formattedTasks = tasks.map((task) => ({
         id: task.id,
-        status: task.preparation_status,
+        preparationStatus: task.preparation_status, // ✅ Change key name
         patientName: task.diet_charts?.patients?.name || "Unknown",
         roomNumber: task.diet_charts?.patients?.room_number || "N/A",
         bedNumber: task.diet_charts?.patients?.bed_number || "N/A",
         dietChart: task.diet_charts?.meal_time || "Not specified",
       }));
-
-      res.status(200).json(formattedTasks);
+      
+      res.status(200).json(formattedTasks); // ✅ Send updated key
+      
     } catch (error) {
       console.error("Error fetching meal preparation tasks:", error);
       res.status(500).json({ error: "Failed to fetch meal preparation tasks" });

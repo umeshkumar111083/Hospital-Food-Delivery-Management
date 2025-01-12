@@ -29,11 +29,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
 
-    // ✅ Format response
+    // ✅ Format response with delivered_at timestamp
     const formattedDeliveries = deliveries.map((delivery) => ({
       id: delivery.id,
       status: delivery.delivery_status,
       notes: delivery.delivery_notes || "No notes provided",
+      delivered_at: delivery.delivered_at || null, // Include delivered_at timestamp
       patientName: delivery.meals?.diet_charts?.patients?.name || "Unknown",
       roomNumber: delivery.meals?.diet_charts?.patients?.room_number || "N/A",
       bedNumber: delivery.meals?.diet_charts?.patients?.bed_number || "N/A",

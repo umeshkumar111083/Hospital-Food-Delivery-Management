@@ -86,31 +86,52 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
 
   useEffect(() => {
     if (!pantryStaffId) return;
-
+  
     const fetchData = async () => {
       try {
-        const [tasksResponse, personnelResponse] = await Promise.all([
+        const [tasksResponse, personnelResponse, assignedPersonnelResponse] = await Promise.all([
           axios.get(`/api/pantrystaffdashboard/tasks?pantry_staff_id=${pantryStaffId}`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           axios.get(`/api/pantrystaffdashboard/delivery_personnel`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          axios.get(`/api/pantrystaffdashboard/assigned_delivery?pantry_staff_id=${pantryStaffId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
-
-        setTasks(tasksResponse.data);
+    
+        console.log("🔹 Tasks Response:", tasksResponse.data);
+        console.log("🔹 Personnel Response:", personnelResponse.data);
+        console.log("🔹 Assigned Personnel Response:", assignedPersonnelResponse.data);
+    
+        // ✅ Map assigned delivery personnel to their respective meal IDs
+        const assignedMap = new Map(assignedPersonnelResponse.data.map((a) => [a.mealId, a]));
+    
+        setTasks(
+          tasksResponse.data.map((task: Task) => ({
+            ...task,
+            preparationStatus: task.status || "Pending",
+            deliveryPersonnelName: assignedMap.get(task.id)?.deliveryPersonnelName || null,
+          }))
+        );
+    
         setPersonnel(personnelResponse.data);
       } catch (error) {
-        console.error("❌ Error fetching tasks:", error);
+        console.error("❌ Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [pantryStaffId]);
 
   const assignMeal = async (mealId: number) => {
+    if (personnel.length === 0) {
+      return alert("❌ No delivery personnel available!");
+    }
+  
     const deliveryPersonnelId = selectedPersonnel[mealId];
     if (!deliveryPersonnelId) return alert("❌ Select a delivery personnel first!");
 
@@ -197,7 +218,7 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
               <p className="font-bold text-xl">Patient: {task.patientName}</p>
               <p>Room: {task.roomNumber}, Bed: {task.bedNumber}</p>
               <p>Diet Chart: {task.dietChart}</p>
-              <p>Preparation Status: {task.preparationStatus}</p>
+              <p>Preparation Status: <span className="font-semibold">{task.preparationStatus}</span></p>
 
               {/* Change Preparation Status */}
               <div className="mt-4">
@@ -224,30 +245,43 @@ const PantryStaffDashboard = ({ token }: { token: string }) => {
               </div>
 
               {/* Assign Delivery Personnel */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700">Assign Delivery Personnel:</label>
-                <select
-                  className="w-full p-2 border rounded-md"
-                  value={selectedPersonnel[task.id] || ""}
-                  onChange={(e) =>
-                    setSelectedPersonnel({ ...selectedPersonnel, [task.id]: Number(e.target.value) })
-                  }
-                >
-                  <option value="">Select Personnel</option>
-                  {personnel.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.name} ({person.phone})
-                    </option>
-                  ))}
-                </select>
+              {/* Show assigned delivery personnel & allow reassignment */}
+              {personnel.length > 0 && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    {task.deliveryPersonnelName
+                      ? `🚚 Assigned Delivery Personnel: ${task.deliveryPersonnelName}`
+                      : "Assign Delivery Personnel"}
+                  </label>
 
-                <button
-                  className="mt-3 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
-                  onClick={() => assignMeal(task.id)}
-                >
-                  🚀 Assign Meal
-                </button>
-              </div>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={selectedPersonnel[task.id] || task.deliveryPersonnelId || ""}
+                    onChange={(e) =>
+                      setSelectedPersonnel({ ...selectedPersonnel, [task.id]: Number(e.target.value) })
+                    }
+                  >
+                    <option value="">Select Personnel</option>
+                    {personnel.map((person) => (
+                      <option key={person.id} value={person.id}>
+                        {person.name} ({person.phone})
+                      </option>
+                    ))}
+                  </select>
+
+                  <button
+                    className="mt-3 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
+                    onClick={() => assignMeal(task.id)}
+                  >
+                    🔄 {task.deliveryPersonnelName ? "Reassign Personnel" : "Assign Meal"}
+                  </button>
+                </div>
+              )}
+              {task.deliveryPersonnelName && (
+                <p className="mt-2 font-medium text-blue-600">
+                  🚚 Assigned Delivery Personnel: <span className="font-semibold">{task.deliveryPersonnelName}</span>
+                </p>
+              )}
             </div>
           ))}
         </div>

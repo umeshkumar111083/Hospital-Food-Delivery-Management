@@ -415,3 +415,5 @@ INSERT INTO deliveries (meal_id, delivery_personnel_id, delivery_status, deliver
 (1, 1, 'In Transit', 'Urgent delivery needed'),
 (2, 1, 'Pending', 'Scheduled for evening delivery'),
 (3, 1, 'Pending', 'Prepare for morning delivery');
+
+DONE !

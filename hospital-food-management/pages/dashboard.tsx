@@ -158,20 +158,38 @@ export default function Dashboard() {
               <h3 className="text-lg font-semibold text-gray-800">{patient.name}</h3>
               <p className="text-gray-600">🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
               <p className="text-gray-600">🔹 Age: {patient.age} | Gender: {patient.gender}</p>
+              <button
+                onClick={() => router.push(`/patients/${patient.id}`)}
+                className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md transition-all"
+              >
+                View More Details
+              </button>
             </div>
           ))}
         </div>
 
         {/* Diet Charts Section */}
-        {/* Diet Charts Section */}
-        <h2 className="text-2xl font-semibold text-gray-700 mb-3">🍽️ Diet Charts</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">🍽️ Diet Charts</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {dietCharts.length > 0 ? (
             dietCharts.map((chart) => (
-              <div key={chart.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800">🍽️ {chart.mealTime} Meal</h3>
+              <div
+                key={chart.id}
+                className="bg-white shadow-lg rounded-lg p-4 border border-gray-200"
+              >
+                <h3 className="text-lg font-semibold text-gray-800">
+                  🍽️ {chart.mealTime} Meal
+                </h3>
                 <p className="text-gray-600">🥗 Ingredients: {chart.ingredients}</p>
-                <p className="text-gray-600">⚠️ Instructions: {chart.instructions || "No special instructions"}</p>
+                <p className="text-gray-600">
+                  ⚠️ Instructions: {chart.instructions || "No special instructions"}
+                </p>
+                <button
+                  onClick={() => router.push(`/diet-charts/${chart.id}`)}
+                  className="mt-3 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
+                >
+                  📄 View Details
+                </button>
               </div>
             ))
           ) : (
@@ -179,17 +197,27 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Pantry Staff Section */}
-        <h2 className="text-2xl font-semibold text-gray-700 mb-3">👨‍🍳 Pantry Staff</h2>
+        <h2 className="text-2xl font-semibold text-gray-700">👨‍🍳 Pantry Staff</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           {pantryStaff.map((staff) => (
-            <div key={staff.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+            <div
+              key={staff.id}
+              className="bg-white shadow-lg rounded-lg p-4 border border-gray-200"
+            >
               <h3 className="text-lg font-semibold text-gray-800">{staff.name}</h3>
               <p className="text-gray-600">📍 Location: {staff.location}</p>
               <p className="text-gray-600">📞 Contact: {staff.phone}</p>
+              <button
+                onClick={() => router.push(`/pantry-staff/${staff.id}`)}
+                className="mt-3 w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 transition-all"
+              >
+                📄 View Details
+              </button>
             </div>
           ))}
         </div>
+
+
       </div>
     </main>
   );

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import styles from "../styles/dashboard.module.css"; // ✅ Import CSS Module
+import { FaUserPlus, FaUtensils, FaTruck, FaUsers, FaSignOutAlt } from "react-icons/fa";
 
-// ✅ Define types for Patients, Diet Charts, and Pantry Staff
 type Patient = {
   id: number;
   name: string;
@@ -70,90 +69,90 @@ export default function Dashboard() {
   };
 
   return (
-    <div className={styles.dashboardContainer}>
-      <div className={styles.dashboardContent}>
-        {/* Header Section */}
-        <div className={styles.header}>
-          <h1 className={styles.title}>🏥 Hospital Food Manager Dashboard</h1>
-          <button onClick={handleLogout} className={styles.logoutBtn}>🚪 Logout</button>
+    <main className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-6 flex justify-center">
+      <div className="max-w-6xl w-full bg-white bg-opacity-90 shadow-xl rounded-lg p-8 backdrop-blur-md">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">🏥 Hospital Food Manager</h1>
+          <button onClick={handleLogout} className="flex items-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow-md transition">
+            <FaSignOutAlt className="mr-2" /> Logout
+          </button>
         </div>
 
         {/* Navigation Buttons */}
-        <div className={styles.buttonGrid}>
-          <button onClick={() => router.push("/add-patient")} className={`${styles.dashboardBtn} ${styles.blue}`}>
-            ➕ Add New Patient
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <button onClick={() => router.push("/add-patient")} className="flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg shadow-lg transition">
+            <FaUserPlus className="mr-2" /> Add Patient
           </button>
-          <button onClick={() => router.push("/add-diet-chart")} className={`${styles.dashboardBtn} ${styles.green}`}>
-            🍽️ Add Diet Chart
+          <button onClick={() => router.push("/add-diet-chart")} className="flex items-center justify-center bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg shadow-lg transition">
+            <FaUtensils className="mr-2" /> Add Diet Chart
           </button>
-          <button onClick={() => router.push("/add-pantry-staff")} className={`${styles.dashboardBtn} ${styles.purple}`}>
-            👨‍🍳 Add Pantry Staff
+          <button onClick={() => router.push("/add-pantry-staff")} className="flex items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-3 rounded-lg shadow-lg transition">
+            <FaUsers className="mr-2" /> Add Pantry Staff
           </button>
-          <button onClick={() => router.push("/delivery-status")} className={`${styles.dashboardBtn} ${styles.orange}`}>
-            📦 Delivery Details
-          </button>
-          <button onClick={() => router.push("/pantry-staff-dashboard")} className={`${styles.dashboardBtn} ${styles.pink}`}>
-            👨‍🍳 Pantry Staff Dashboard
+          <button onClick={() => router.push("/delivery-status")} className="flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg shadow-lg transition">
+            <FaTruck className="mr-2" /> Delivery Details
           </button>
         </div>
 
-        {/* Loading State */}
+        {/* Data Sections */}
         {loading ? (
-          <p className={styles.loadingText}>Loading dashboard data...</p>
+          <p className="text-center text-gray-600">Loading dashboard data...</p>
         ) : (
           <>
             {/* Patients Section */}
-            <h2 className={styles.sectionTitle}>🧑‍⚕️ Patients</h2>
-            <div className={styles.gridContainer}>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-3">🧑‍⚕️ Patients</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {patients.length > 0 ? (
                 patients.map((patient) => (
-                  <div key={patient.id} className={styles.dashboardCard}>
-                    <h3 className={styles.cardTitle}>{patient.name}</h3>
-                    <p>🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
-                    <p>🔹 Age: {patient.age} | Gender: {patient.gender}</p>
-                    <p>💊 Disease: {patient.disease || "N/A"}</p>
-                    <p>📞 Contact: {patient.contactPhone}</p>
+                  <div key={patient.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800">{patient.name}</h3>
+                    <p className="text-gray-600">🛏️ Room {patient.roomNumber}, Bed {patient.bedNumber}</p>
+                    <p className="text-gray-600">🔹 Age: {patient.age} | Gender: {patient.gender}</p>
+                    <p className="text-gray-600">💊 Disease: {patient.disease || "N/A"}</p>
+                    <p className="text-gray-600">📞 Contact: {patient.contactPhone}</p>
                   </div>
                 ))
               ) : (
-                <p className={styles.emptyText}>No patients available.</p>
+                <p className="text-gray-500">No patients available.</p>
               )}
             </div>
 
             {/* Diet Charts Section */}
-            <h2 className={styles.sectionTitle}>🍽️ Diet Charts</h2>
-            <div className={styles.gridContainer}>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-3">🍽️ Diet Charts</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {dietCharts.length > 0 ? (
                 dietCharts.map((chart) => (
-                  <div key={chart.id} className={styles.dashboardCard}>
-                    <h3 className={styles.cardTitle}>🍽️ {chart.mealTime} Meal</h3>
-                    <p>🥗 Ingredients: {chart.ingredients}</p>
-                    <p>⚠️ Instructions: {chart.instructions}</p>
+                  <div key={chart.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800">🍽️ {chart.mealTime} Meal</h3>
+                    <p className="text-gray-600">🥗 Ingredients: {chart.ingredients}</p>
+                    <p className="text-gray-600">⚠️ Instructions: {chart.instructions}</p>
                   </div>
                 ))
               ) : (
-                <p className={styles.emptyText}>No diet charts available.</p>
+                <p className="text-gray-500">No diet charts available.</p>
               )}
             </div>
 
             {/* Pantry Staff Section */}
-            <h2 className={styles.sectionTitle}>👨‍🍳 Pantry Staff</h2>
-            <div className={styles.gridContainer}>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-3">👨‍🍳 Pantry Staff</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {pantryStaff.length > 0 ? (
                 pantryStaff.map((staff) => (
-                  <div key={staff.id} className={styles.dashboardCard}>
-                    <h3 className={styles.cardTitle}>{staff.name}</h3>
-                    <p>📍 Location: {staff.location}</p>
-                    <p>📞 Contact: {staff.phone}</p>
+                  <div key={staff.id} className="bg-white shadow-lg rounded-lg p-4 border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800">{staff.name}</h3>
+                    <p className="text-gray-600">📍 Location: {staff.location}</p>
+                    <p className="text-gray-600">📞 Contact: {staff.phone}</p>
                   </div>
                 ))
               ) : (
-                <p className={styles.emptyText}>No pantry staff available.</p>
+                <p className="text-gray-500">No pantry staff available.</p>
               )}
             </div>
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }

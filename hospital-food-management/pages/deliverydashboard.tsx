@@ -15,6 +15,7 @@ type Task = {
   roomNumber: string | number;
   bedNumber: string | number;
   dietChart: string;
+  delivered_at?: string; // Include delivered_at timestamp
 };
 
 // ✅ Decoded JWT Type
@@ -94,15 +95,18 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
     try {
       const notes = deliveryNotes[taskId] || "No additional notes provided";
 
-      await axios.put(
+      const response = await axios.put(
         `/api/delivery_personnel/update`,
         { id: taskId, status: "Delivered", notes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      // Get the delivered_at timestamp from the response
+      const { delivered_at } = response.data;
+
       setTasks((prev) =>
         prev.map((task) =>
-          task.id === taskId ? { ...task, status: "Delivered", notes } : task
+          task.id === taskId ? { ...task, status: "Delivered", notes, delivered_at } : task
         )
       );
 
@@ -171,6 +175,13 @@ const DeliveryDashboard = ({ token, deliveryPersonnelId }: { token: string; deli
 
               {task.notes && (
                 <p className="mt-2 text-sm text-gray-700 italic">📌 Notes: {task.notes}</p>
+              )}
+
+              {/* ✅ Display Delivered At */}
+              {task.status === "Delivered" && task.delivered_at && (
+                <p className="mt-2 text-sm text-gray-700 italic">
+                  📅 Delivered At: {new Date(task.delivered_at).toLocaleString()}
+                </p>
               )}
 
               {/* ✅ Input for additional delivery notes */}

@@ -42,10 +42,10 @@
     "postcss": "^8.4.49",
     "prisma": "^6.2.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.4.2"
+    "typescript": "^5.7.3"
   },
   "engines": {
-    "node": "22.x" 
+    "node": "22.x"
   },
   "main": "index.js",
   "license": "MIT"

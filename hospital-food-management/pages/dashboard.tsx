@@ -53,7 +53,7 @@ export default function Dashboard() {
     assignedMeals: 0,
     unassignedMeals: 0,
   });
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchDashboardData();
@@ -73,8 +73,6 @@ export default function Dashboard() {
       setPantryStaff(pantryRes.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
     }
   };
 

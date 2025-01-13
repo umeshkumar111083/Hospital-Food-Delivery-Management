@@ -36,5 +36,37 @@ Features
 	•	Axios for API requests
 	•	Chart.js for data visualization
 
-![Hello](./ScreenshotsOfPages/Screenshot%202025-01-13%20at%203.23.46%20PM.png)
+
+![Sign Up Page](./ScreenshotsOfPages/Sign%20Up%20Page.png)
+
+![Login In Page](./ScreenshotsOfPages/Sign%20In%20Page.png)
+
+![Hospital Manager Dashboard](./ScreenshotsOfPages/Hospital%20Manager.png)
+
+![Pantry Staff Dashboard](./ScreenshotsOfPages/Pantry%20Staff%20Dashbaord.png)
+
+![Delivery Dashboard](./ScreenshotsOfPages/Delivery%20Dashboard.png)
+
+
+
+![Add Diet Chart Functionality which can be used by Hospital Manager](./ScreenshotsOfPages/Add%20Diet%20Chart.png)
+
+![Add Patient Functionality which can be used by Hospital Manager](./ScreenshotsOfPages/Add%20Patient.png)
+
+![Assign Meal Functionality which can be used by Hospital Manager](./ScreenshotsOfPages/Assign%20Meal.png)
+
+
+![Delivery Status Functionality which can be used by Hospital Manager](./ScreenshotsOfPages/Delivery%20Status.png)
+
+![Patient Details of a particular patient](./ScreenshotsOfPages/Details%20of%20Specific%20Patient.png)
+
+
+![Pantry Details of a particular pantry staff](./ScreenshotsOfPages/Details%20of%20the%20Pantry%20Staff.png)
+
+![Diet Chart Details of a particular meal](./ScreenshotsOfPages/Details%20of%20the%20Specific%20Meal.png)
+
+
+
+
+
 

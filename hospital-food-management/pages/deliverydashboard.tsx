@@ -41,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     }
 
     // ✅ Fetch correct delivery_personnel_id from the database
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
     // Make the API request using the full URL
     const response = await axios.get(`${baseUrl}/api/delivery_personnel/${decoded.id}`);
